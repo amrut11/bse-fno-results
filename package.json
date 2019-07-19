@@ -10,8 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "messaging-api-telegram": "^0.7.11",
-    "node-telegram-bot-api": "^0.30.0",
-    "telegram-send-message": "0.0.4"
+    "ejs": "^2.6.2",
+    "express": "^4.17.1",
+    "node-telegram-bot-api": "^0.30.0"
   }
 }

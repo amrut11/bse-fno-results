@@ -1,24 +1,34 @@
 const TelegramBot = require('node-telegram-bot-api');
-const http = require('http');
+const express = require('express');
+const ejs = require('ejs');
 
-const token = '923352008:AAGigsiG3IApxMLmsb8M_PGRlvT757IhBuk';
-const channelChatId = '-1001453070196';
+const PORT = process.env.PORT || 3000;
 
-const port = process.env.PORT || 3000
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/html');
-    res.end('<h1>Started bot successfully</h1>');
-});
-server.listen(port, () => {
-    console.log(`Server running at port ` + port);
-    // Create a bot that uses 'polling' to fetch new updates
+const app = express();
+app.use(express.static('public'));
+app.set('view engine', 'ejs')
+
+app.get('/', function (req, res) {
     const bot = new TelegramBot(token, { polling: true });
-    bot.sendMessage(channelChatId, 'Logged in');
+    bot.sendMessage(channelChatId, 'Today\'s Expected Results'); // TODO: Replace with stocks for the day.
 
     bot.on('message', (msg) => {
         const chatId = msg.chat.id;
         bot.sendMessage(chatId, 'I don\'t do anything. Join https://t.me/joinchat/AAAAAFacF3TKxasORZyjpQ');
     });
 
+    res.render('index');
+});
+
+const token = '923352008:AAGigsiG3IApxMLmsb8M_PGRlvT757IhBuk';
+const channelChatId = '-1001453070196';
+
+app.get('/checkResult', function (req, res) {
+    const bot = new TelegramBot(token, { polling: true });
+    bot.sendMessage(channelChatId, 'No results yet.'); // TODO: Replace with latest results.
+    res.render('index');
+});
+
+app.listen(PORT, function () {
+    console.log('Example app listening on port ' + PORT + '!');
 });
