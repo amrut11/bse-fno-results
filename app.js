@@ -1,8 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
 const http = require('http');
-const sendMessage = require('./send-message');
 
 const token = '923352008:AAGigsiG3IApxMLmsb8M_PGRlvT757IhBuk';
+const channelChatId = '-1001453070196';
 
 const port = process.env.PORT || 3000
 const server = http.createServer((req, res) => {
@@ -15,24 +15,9 @@ server.listen(port, () => {
     // Create a bot that uses 'polling' to fetch new updates
     const bot = new TelegramBot(token, { polling: true });
 
-    // Matches "/echo [whatever]"
-    bot.onText(/\/register/, (msg) => {
-        const chatId = msg.chat.id;
-        bot.sendMessage(chatId, "Registered successfully.");
-    });
-
-    bot.onText(/\/unregister/, (msg) => {
-        const chatId = msg.chat.id;
-        bot.sendMessage(chatId, "Unregistered successfully.");
-    });
-
-    // Listen for any kind of message. There are different kinds of
-    // messages.
     bot.on('message', (msg) => {
-        const chatId = msg.chat.id;
-
-        // send a message to the chat acknowledging receipt of their message
-        bot.sendMessage(chatId, 'Invlaid input');
+        const text = msg.text;
+        bot.sendMessage(channelChatId, text);
     });
 
 });
