@@ -14,10 +14,11 @@ server.listen(port, () => {
     console.log(`Server running at port ` + port);
     // Create a bot that uses 'polling' to fetch new updates
     const bot = new TelegramBot(token, { polling: true });
+    bot.sendMessage(channelChatId, 'Logged in');
 
     bot.on('message', (msg) => {
-        const text = msg.text;
-        bot.sendMessage(channelChatId, text);
+        const chatId = msg.chat.id;
+        bot.sendMessage(chatId, 'I don\'t do anything. Join https://t.me/joinchat/AAAAAFacF3TKxasORZyjpQ');
     });
 
 });
