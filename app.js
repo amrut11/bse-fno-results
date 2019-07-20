@@ -25,7 +25,8 @@ const channelChatId = '-1001453070196';
 
 app.get('/checkResult', function (req, res) {
     const bot = new TelegramBot(token, { polling: true });
-    bot.sendMessage(channelChatId, 'No results yet.'); // TODO: Replace with latest results.
+    var date = new Date();
+    bot.sendMessage(channelChatId, 'As of ' + date + ' no results.'); // TODO: Replace with latest results.
     res.render('index');
 });
 
