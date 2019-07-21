@@ -20,7 +20,7 @@ app.set('view engine', 'ejs');
 app.get('/', function (req, res) {
     const bot = new TelegramBot(token, { polling: true });
 
-    bot.onText(/\/results (.+)/, (msg, match) => {
+    bot.onText(/\/results (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         const dateToCheck = match[1];
         var resultsDate;
@@ -28,15 +28,13 @@ app.get('/', function (req, res) {
         if (!dateToCheck || dateToCheck === 'today') {
             resultsDate = dateutil.getDate();
         } else {
-            resultsDate = dateToCheck;
+            resultsDate = new Date(dateToCheck);
         }
 
-        console.dir(chatId);
-        var message = createResultsMessage(resultsDate);
-        bot.sendMessage(chatId, message);
+        var message = await sendResultsMessage(chatId, resultsDate);
     });
 
-    bot.on('message', (msg) => {
+    bot.onText(/\/help (.+)/, (msg, match) => {
         const chatId = msg.chat.id;
         bot.sendMessage(chatId, constants.greeting);
     });
@@ -52,25 +50,23 @@ app.get('/checkResult', function (req, res) {
 });
 
 app.get('/todayResults', async function (req, res) {
-    const bot = new TelegramBot(token, { polling: true });
-    var message = await createResultsMessage(dateutil.getDate());
-    if (message) {
-        bot.sendMessage(channelChatId, message);
-    } else {
-        bot.sendMessage(channelChatId, 'No results on ' + nowDate);
-    }
+    var message = await sendResultsMessage(channelChatId, dateutil.getDate());
     res.render('index');
 });
 
-async function createResultsMessage(dateToCheck) {
+async function sendResultsMessage(chatId, dateToCheck) {
+    const bot = new TelegramBot(token, { polling: true });
     var results = await reqHelper.downloadPage(resultsUrl, true);
     for (var i = 0; i < results.length; i++) {
         var result = results[i];
         var resultsDate = new Date(result.date);
         if (resultsDate.getDate() == dateToCheck.getDate() && resultsDate.getMonth() == dateToCheck.getMonth() && resultsDate.getFullYear() == dateToCheck.getFullYear()) {
-            return createMessage(result);
+            var message = createMessage(result);
+            bot.sendMessage(chatId, message);
+            return;
         }
     }
+    bot.sendMessage(chatId, 'No results on ' + dateutil.formatDate(dateToCheck));
 }
 
 function createMessage(result) {
