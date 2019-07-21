@@ -1,3 +1,4 @@
+const dateutil = require('./utils/dateutil');
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 const ejs = require('ejs');
@@ -25,7 +26,7 @@ const channelChatId = '-1001453070196';
 
 app.get('/checkResult', function (req, res) {
     const bot = new TelegramBot(token, { polling: true });
-    var date = new Date();
+    var date = dateutil.getDate();
     bot.sendMessage(channelChatId, 'As of ' + date + ' no results.'); // TODO: Replace with latest results.
     res.render('index');
 });
