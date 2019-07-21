@@ -75,7 +75,7 @@ async function checkResults(chatId, interval, emptyMessage) {
         }
     }
     if (!resultsFound && emptyMessage) {
-        bot.sendMessage(chatId, 'No results');
+        bot.sendMessage(chatId, 'No results today in last ' + interval + ' minutes.');
     }
 }
 
