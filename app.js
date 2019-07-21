@@ -28,7 +28,7 @@ app.get('/', function (req, res) {
 
 app.get('/checkResult', function (req, res) {
     var date = dateutil.getDate();
-    bot.sendMessage(channelChatId, 'As of ' + date + ' no results.'); // TODO: Replace with latest results.
+    // TODO: Check latest results.
     res.render('index');
 });
 
