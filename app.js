@@ -9,7 +9,6 @@ const resultsUrl = 'https://tools.traderslounge.in/fnoresults';
 
 const token = '923352008:AAGigsiG3IApxMLmsb8M_PGRlvT757IhBuk';
 const channelChatId = '-1001453070196';
-const bot = new TelegramBot(token, { polling: true });
 
 const PORT = process.env.PORT || 3000;
 
@@ -18,6 +17,7 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 app.get('/', function (req, res) {
+    const bot = new TelegramBot(token, { polling: true });
     bot.on('message', (msg) => {
         const chatId = msg.chat.id;
         bot.sendMessage(chatId, 'I don\'t do anything. Join https://t.me/joinchat/AAAAAFacF3TKxasORZyjpQ');
@@ -33,12 +33,13 @@ app.get('/checkResult', function (req, res) {
 });
 
 app.get('/todayResults', async function (req, res) {
+    const bot = new TelegramBot(token, { polling: true });
     var results = await reqHelper.downloadPage(resultsUrl, true);
-    sendTodayResults(results);
+    sendTodayResults(bot, results);
     res.render('index');
 });
 
-function sendTodayResults(results) {
+function sendTodayResults(bot, results) {
     var nowDate = dateutil.getDate();
     for (var i = 0; i < results.length; i++) {
         var result = results[i];
