@@ -47,7 +47,7 @@ app.get('/', function (req, res) {
 
 
 app.get('/checkResult', async function (req, res) {
-    await checkResults(channelChatId, true);
+    await checkResults(channelChatId, false);
     res.render('index');
 });
 
