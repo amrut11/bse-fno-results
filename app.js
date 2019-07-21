@@ -6,8 +6,6 @@ const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 const ejs = require('ejs');
 
-const resultsUrl = 'https://tools.traderslounge.in/fnoresults';
-
 const token = '923352008:AAGigsiG3IApxMLmsb8M_PGRlvT757IhBuk';
 const channelChatId = '-1001453070196';
 
@@ -31,7 +29,12 @@ app.get('/', function (req, res) {
             resultsDate = new Date(dateToCheck);
         }
 
-        var message = await sendResultsMessage(chatId, resultsDate);
+        await sendResultsMessage(chatId, resultsDate);
+    });
+
+    bot.onText(/\/check (.+)/, async (msg, match) => {
+        var chatId = msg.chat.id;
+        await checkResults(chatId, true);
     });
 
     bot.onText(/\/help (.+)/, (msg, match) => {
@@ -43,20 +46,41 @@ app.get('/', function (req, res) {
 });
 
 
-app.get('/checkResult', function (req, res) {
-    var date = dateutil.getDate();
-    // TODO: Check latest results.
+app.get('/checkResult', async function (req, res) {
+    await checkResults(channelChatId, true);
     res.render('index');
 });
 
 app.get('/todayResults', async function (req, res) {
-    var message = await sendResultsMessage(channelChatId, dateutil.getDate());
+    await sendResultsMessage(channelChatId, dateutil.getDate());
     res.render('index');
 });
 
+async function checkResults(chatId, emptyMessage) {
+    const bot = new TelegramBot(token, { polling: true });
+    var date = dateutil.getDate();
+    var todayDate = dateutil.formatTodayDate(date);
+    var resultsApi = constants.bseResultsApi.replace('{startDate}', todayDate).replace('{endDate}', todayDate);
+    var currentResults = await reqHelper.downloadPage(resultsApi, true);
+    var resultsTable = currentResults.Table;
+    var resultsFound = false;
+    for (var i = 0; i < resultsTable.length; i++) {
+        var result = resultsTable[i];
+        var resultDate = new Date(result.NEWS_DT);
+        var diff = (date.getTime() - resultDate.getTime()) / 1000 / 60;
+        if (diff > 0 && diff < constants.INTERVAL) {
+            resultsFound = true;
+            bot.sendMessage(chatId, message);
+        }
+    }
+    if (!resultsFound && emptyMessage) {
+        bot.sendMessage(chatId, 'No results');
+    }
+}
+
 async function sendResultsMessage(chatId, dateToCheck) {
     const bot = new TelegramBot(token, { polling: true });
-    var results = await reqHelper.downloadPage(resultsUrl, true);
+    var results = await reqHelper.downloadPage(constants.fnoResultsUrl, true);
     for (var i = 0; i < results.length; i++) {
         var result = results[i];
         var resultsDate = new Date(result.date);

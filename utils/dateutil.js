@@ -9,6 +9,12 @@ function getDate() {
     return date;
 }
 
+function formatTodayDate(date) {
+    var month = date.getMonth();
+    var day = date.getDate();
+    return date.getFullYear() + '' + (month < 10 ? '0' + month : month) + '' + (day < 10 ? '0' + day : day);
+}
+
 function formatDate(date) {
     var monthNames = [
         "January", "February", "March",
@@ -25,5 +31,5 @@ function formatDate(date) {
 }
 
 module.exports = {
-    getDate, formatDate
+    getDate, formatDate, formatTodayDate
 }
