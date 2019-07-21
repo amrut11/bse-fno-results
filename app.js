@@ -34,7 +34,8 @@ app.get('/', function (req, res) {
 
     bot.onText(/\/check (.+)/, async (msg, match) => {
         var chatId = msg.chat.id;
-        await checkResults(chatId, true);
+        const interval = match[1];
+        await checkResults(chatId, interval, true);
     });
 
     bot.onText(/\/help (.+)/, (msg, match) => {
@@ -47,7 +48,7 @@ app.get('/', function (req, res) {
 
 
 app.get('/checkResult', async function (req, res) {
-    await checkResults(channelChatId, false);
+    await checkResults(channelChatId, constants.INTERVAL, false);
     res.render('index');
 });
 
@@ -56,7 +57,7 @@ app.get('/todayResults', async function (req, res) {
     res.render('index');
 });
 
-async function checkResults(chatId, emptyMessage) {
+async function checkResults(chatId, interval, emptyMessage) {
     const bot = new TelegramBot(token, { polling: true });
     var date = dateutil.getDate();
     var todayDate = dateutil.formatTodayDate(date);
@@ -68,7 +69,7 @@ async function checkResults(chatId, emptyMessage) {
         var result = resultsTable[i];
         var resultDate = new Date(result.NEWS_DT);
         var diff = (date.getTime() - resultDate.getTime()) / 1000 / 60;
-        if (diff > 0 && diff < constants.INTERVAL) {
+        if (diff > 0 && diff < interval) {
             resultsFound = true;
             bot.sendMessage(chatId, message);
         }
