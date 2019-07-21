@@ -34,8 +34,12 @@ app.get('/checkResult', function (req, res) {
 
 app.get('/todayResults', async function (req, res) {
     var results = await reqHelper.downloadPage(resultsUrl, true);
+    sendTodayResults(results);
+    res.render('index');
+});
+
+function sendTodayResults(results) {
     var nowDate = dateutil.getDate();
-    nowDate.setTime(nowDate.getTime());
     for (var i = 0; i < results.length; i++) {
         var result = results[i];
         var resultsDate = new Date(result.date);
@@ -46,7 +50,7 @@ app.get('/todayResults', async function (req, res) {
         }
     }
     bot.sendMessage(channelChatId, 'No results on ' + nowDate);
-});
+}
 
 function createMessage(result) {
     var message = result.title + '\n';
