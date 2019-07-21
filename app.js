@@ -19,17 +19,26 @@ app.set('view engine', 'ejs');
 
 app.get('/', function (req, res) {
     const bot = new TelegramBot(token, { polling: true });
-    
+
+    bot.onText(/\/results (.+)/, (msg, match) => {
+        const chatId = msg.chat.id;
+        const dateToCheck = match[1];
+        var resultsDate;
+
+        if (!dateToCheck || dateToCheck === 'today') {
+            resultsDate = dateutil.getDate();
+        } else {
+            resultsDate = dateToCheck;
+        }
+
+        console.dir(chatId);
+        var message = createResultsMessage(resultsDate);
+        bot.sendMessage(chatId, message);
+    });
+
     bot.on('message', (msg) => {
         const chatId = msg.chat.id;
         bot.sendMessage(chatId, constants.greeting);
-    });
-
-    bot.onText('/\/todayResults', (msg) => {
-        const chatId = msg.chat.id;
-        console.dir(chatId);
-        var message = createResultsMessage(dateutil.getDate());
-        bot.sendMessage(chatId, message);
     });
 
     res.render('index');
