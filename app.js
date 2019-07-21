@@ -1,5 +1,6 @@
 const dateutil = require('./utils/dateutil');
 const reqHelper = require('./utils/request-helper');
+const constants = require('./utils/constants');
 
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
@@ -18,10 +19,19 @@ app.set('view engine', 'ejs');
 
 app.get('/', function (req, res) {
     const bot = new TelegramBot(token, { polling: true });
+    
     bot.on('message', (msg) => {
         const chatId = msg.chat.id;
-        bot.sendMessage(chatId, 'I don\'t do anything. Join https://t.me/joinchat/AAAAAFacF3TKxasORZyjpQ');
+        bot.sendMessage(chatId, constants.greeting);
     });
+
+    bot.onText('/\/todayResults', (msg) => {
+        const chatId = msg.chat.id;
+        console.dir(chatId);
+        var message = createResultsMessage(dateutil.getDate());
+        bot.sendMessage(chatId, message);
+    });
+
     res.render('index');
 });
 
@@ -34,23 +44,24 @@ app.get('/checkResult', function (req, res) {
 
 app.get('/todayResults', async function (req, res) {
     const bot = new TelegramBot(token, { polling: true });
-    var results = await reqHelper.downloadPage(resultsUrl, true);
-    sendTodayResults(bot, results);
+    var message = await createResultsMessage(dateutil.getDate());
+    if (message) {
+        bot.sendMessage(channelChatId, message);
+    } else {
+        bot.sendMessage(channelChatId, 'No results on ' + nowDate);
+    }
     res.render('index');
 });
 
-function sendTodayResults(bot, results) {
-    var nowDate = dateutil.getDate();
+async function createResultsMessage(dateToCheck) {
+    var results = await reqHelper.downloadPage(resultsUrl, true);
     for (var i = 0; i < results.length; i++) {
         var result = results[i];
         var resultsDate = new Date(result.date);
-        if (resultsDate.getDate() == nowDate.getDate() && resultsDate.getMonth() == nowDate.getMonth() && resultsDate.getFullYear() == nowDate.getFullYear()) {
-            var message = createMessage(result);
-            bot.sendMessage(channelChatId, message);
-            return;
+        if (resultsDate.getDate() == dateToCheck.getDate() && resultsDate.getMonth() == dateToCheck.getMonth() && resultsDate.getFullYear() == dateToCheck.getFullYear()) {
+            return createMessage(result);
         }
     }
-    bot.sendMessage(channelChatId, 'No results on ' + nowDate);
 }
 
 function createMessage(result) {
