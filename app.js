@@ -67,6 +67,10 @@ async function checkResults(chatId, interval, emptyMessage) {
     var resultsFound = false;
     for (var i = 0; i < resultsTable.length; i++) {
         var result = resultsTable[i];
+        var scripId = result.SCRIP_CD;
+        if (!constants.fnoScriptIDs.includes(scripId)) {
+            continue;
+        }
         var resultDate = new Date(result.NEWS_DT);
         var diff = (date.getTime() - resultDate.getTime()) / 1000 / 60;
         if (diff > 0 && diff < interval) {
