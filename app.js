@@ -71,6 +71,7 @@ async function checkResults(chatId, interval, emptyMessage) {
         var diff = (date.getTime() - resultDate.getTime()) / 1000 / 60;
         if (diff > 0 && diff < interval) {
             resultsFound = true;
+            var message = 'Results out!\nTime: ' + resultDate + '\nNews: ' + result.NEWSSUB;
             bot.sendMessage(chatId, message);
         }
     }

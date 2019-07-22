@@ -10,7 +10,7 @@ function getDate() {
 }
 
 function formatTodayDate(date) {
-    var month = date.getMonth();
+    var month = date.getMonth() + 1;
     var day = date.getDate();
     return date.getFullYear() + '' + (month < 10 ? '0' + month : month) + '' + (day < 10 ? '0' + day : day);
 }
