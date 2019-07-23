@@ -1,13 +1,12 @@
 const dateutil = require('./utils/dateutil');
 const reqHelper = require('./utils/request-helper');
-const constants = require('./utils/constants');
+const dotenv = require('dotenv');
 
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 const ejs = require('ejs');
 
-const token = '923352008:AAGigsiG3IApxMLmsb8M_PGRlvT757IhBuk';
-const channelChatId = '-1001453070196';
+const GREETING = 'Join https://t.me/joinchat/AAAAAFacF3TKxasORZyjpQ';
 
 const PORT = process.env.PORT || 3000;
 
@@ -16,7 +15,7 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 app.get('/', function (req, res) {
-    const bot = new TelegramBot(token, { polling: true });
+    const bot = new TelegramBot(process.env.token, { polling: true });
 
     bot.onText(/\/results (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
@@ -29,18 +28,18 @@ app.get('/', function (req, res) {
             resultsDate = new Date(dateToCheck);
         }
 
-        await sendResultsMessage(chatId, resultsDate);
+        await sendResultsMessage(bot, chatId, resultsDate);
     });
 
     bot.onText(/\/check (.+)/, async (msg, match) => {
         var chatId = msg.chat.id;
         const interval = match[1];
-        await checkResults(chatId, interval, true);
+        await checkResults(bot, chatId, interval, true);
     });
 
     bot.onText(/\/help (.+)/, (msg, match) => {
         const chatId = msg.chat.id;
-        bot.sendMessage(chatId, constants.greeting);
+        bot.sendMessage(chatId, GREETING);
     });
 
     res.render('index');
@@ -48,27 +47,28 @@ app.get('/', function (req, res) {
 
 
 app.get('/checkResult', async function (req, res) {
-    await checkResults(channelChatId, constants.INTERVAL, false);
+    const bot = new TelegramBot(process.env.token, { polling: true });
+    await checkResults(bot, process.env.channelChatId, process.env.INTERVAL, false);
     res.render('index');
 });
 
 app.get('/todayResults', async function (req, res) {
-    await sendResultsMessage(channelChatId, dateutil.getDate());
+    const bot = new TelegramBot(process.env.token, { polling: true });
+    await sendResultsMessage(bot, process.env.channelChatId, dateutil.getDate());
     res.render('index');
 });
 
-async function checkResults(chatId, interval, emptyMessage) {
-    const bot = new TelegramBot(token, { polling: true });
+async function checkResults(bot, chatId, interval, emptyMessage) {
     var date = dateutil.getDate();
     var todayDate = dateutil.formatTodayDate(date);
-    var resultsApi = constants.bseResultsApi.replace('{startDate}', todayDate).replace('{endDate}', todayDate);
+    var resultsApi = process.env.bseResultsApi.replace('{startDate}', todayDate).replace('{endDate}', todayDate);
     var currentResults = await reqHelper.downloadPage(resultsApi, true);
     var resultsTable = currentResults.Table;
     var resultsFound = false;
     for (var i = 0; i < resultsTable.length; i++) {
         var result = resultsTable[i];
         var scripId = result.SCRIP_CD;
-        if (!constants.fnoScriptIDs.includes(scripId)) {
+        if (!process.env.fnoScriptIDs.includes(scripId)) {
             continue;
         }
         var resultDate = new Date(result.NEWS_DT);
@@ -84,9 +84,8 @@ async function checkResults(chatId, interval, emptyMessage) {
     }
 }
 
-async function sendResultsMessage(chatId, dateToCheck) {
-    const bot = new TelegramBot(token, { polling: true });
-    var results = await reqHelper.downloadPage(constants.fnoResultsUrl, true);
+async function sendResultsMessage(bot, chatId, dateToCheck) {
+    var results = await reqHelper.downloadPage(process.env.fnoResultsUrl, true);
     for (var i = 0; i < results.length; i++) {
         var result = results[i];
         var resultsDate = new Date(result.date);
@@ -109,5 +108,6 @@ function createMessage(result) {
 }
 
 app.listen(PORT, function () {
+    dotenv.config();
     console.log('Example app listening on port ' + PORT + '!');
 });
