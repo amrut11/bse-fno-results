@@ -15,18 +15,45 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 app.get('/', function (req, res) {
+    const bot = new TelegramBot(process.env.token, { polling: true });
+
+    bot.onText(/\/results (.+)/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const dateToCheck = match[1];
+        var resultsDate;
+
+        if (!dateToCheck || dateToCheck === 'today') {
+            resultsDate = dateutil.getDate();
+        } else {
+            resultsDate = new Date(dateToCheck);
+        }
+
+        await sendResultsMessage(bot, chatId, resultsDate);
+    });
+
+    bot.onText(/\/check (.+)/, async (msg, match) => {
+        var chatId = msg.chat.id;
+        const interval = match[1];
+        await checkResults(bot, chatId, interval, true);
+    });
+
+    bot.onText(/\/help (.+)/, (msg, match) => {
+        const chatId = msg.chat.id;
+        bot.sendMessage(chatId, GREETING);
+    });
+
     res.render('index');
 });
 
 
 app.get('/checkResult', async function (req, res) {
-    const bot = new TelegramBot(process.env.token, { polling: true });
+    const bot = new TelegramBot(process.env.token);
     await checkResults(bot, process.env.channelChatId, process.env.INTERVAL, false);
     res.render('index');
 });
 
 app.get('/todayResults', async function (req, res) {
-    const bot = new TelegramBot(process.env.token, { polling: true });
+    const bot = new TelegramBot(process.env.token);
     await sendResultsMessage(bot, process.env.channelChatId, dateutil.getDate());
     res.render('index');
 });
