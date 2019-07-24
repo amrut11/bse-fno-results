@@ -75,8 +75,9 @@ async function checkResults(bot, chatId, interval, emptyMessage) {
         var diff = (date.getTime() - resultDate.getTime()) / 1000 / 60;
         if (diff > 0 && diff < interval) {
             resultsFound = true;
-            var message = 'Results out!\nTime: ' + result.NEWS_DT + '\nNews: ' + result.NEWSSUB;
-            bot.sendMessage(chatId, message);
+            var message = '*Results out!*\n----------------------\nScrip: *' + result.SLONGNAME +
+                '*\nTime: ' + dateutil.formatTimeDate(resultDate) + '\nNews: ' + result.NEWSSUB;
+            bot.sendMessage(chatId, message, { parse_mode: "markdown" });
         }
     }
     if (!resultsFound && emptyMessage) {

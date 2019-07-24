@@ -1,3 +1,5 @@
+var dateFormat = require('dateformat');
+
 const FIVE_AND_HALF_HOURS = 5.5 * 60 * 60 * 1000;
 
 function getDate() {
@@ -9,27 +11,18 @@ function getDate() {
     return date;
 }
 
-function formatTodayDate(date) {
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    return date.getFullYear() + '' + (month < 10 ? '0' + month : month) + '' + (day < 10 ? '0' + day : day);
+function formatDate(date) {
+    return dateFormat(date, 'dd mmm yyyy');
 }
 
-function formatDate(date) {
-    var monthNames = [
-        "January", "February", "March",
-        "April", "May", "June", "July",
-        "August", "September", "October",
-        "November", "December"
-    ];
+function formatTodayDate(date) {
+    return dateFormat(date, 'yyyymmdd');
+}
 
-    var day = date.getDate();
-    var monthIndex = date.getMonth();
-    var year = date.getFullYear();
-
-    return day + ' ' + monthNames[monthIndex] + ' ' + year;
+function formatTimeDate(date) {
+    return dateFormat(date, 'dd mmmm yyyy HH:MM:ss:l');
 }
 
 module.exports = {
-    getDate, formatDate, formatTodayDate
+    getDate, formatDate, formatTodayDate, formatTimeDate
 }
