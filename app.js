@@ -14,37 +14,19 @@ const app = express();
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
+var init = false;
+
 app.get('/', function (req, res) {
-    const bot = new TelegramBot(process.env.token, { polling: true });
-
-    bot.onText(/\/results (.+)/, async (msg, match) => {
-        const chatId = msg.chat.id;
-        const dateToCheck = match[1];
-        var resultsDate;
-
-        if (!dateToCheck || dateToCheck === 'today') {
-            resultsDate = dateutil.getDate();
-        } else {
-            resultsDate = new Date(dateToCheck);
-        }
-
-        await sendResultsMessage(bot, chatId, resultsDate);
-    });
-
-    bot.onText(/\/check (.+)/, async (msg, match) => {
-        var chatId = msg.chat.id;
-        const interval = match[1];
-        await checkResults(bot, chatId, interval, true);
-    });
-
-    bot.onText(/\/help (.+)/, (msg, match) => {
-        const chatId = msg.chat.id;
-        bot.sendMessage(chatId, GREETING);
-    });
-
     res.render('index');
 });
 
+app.get('/startBot', function (req, res) {
+    if (!init) {
+        startBot();
+        init = true;
+    }
+    res.render('index');
+});
 
 app.get('/checkResult', async function (req, res) {
     const bot = new TelegramBot(process.env.token);
@@ -108,7 +90,40 @@ function createMessage(result) {
     return message;
 }
 
+function startBot() {
+    const bot = new TelegramBot(process.env.token, { polling: true });
+
+    bot.onText(/\/results (.+)/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const dateToCheck = match[1];
+        var resultsDate;
+
+        if (!dateToCheck || dateToCheck === 'today') {
+            resultsDate = dateutil.getDate();
+        } else {
+            resultsDate = new Date(dateToCheck);
+        }
+
+        await sendResultsMessage(bot, chatId, resultsDate);
+    });
+
+    bot.onText(/\/check (.+)/, async (msg, match) => {
+        var chatId = msg.chat.id;
+        const interval = match[1];
+        await checkResults(bot, chatId, interval, true);
+    });
+
+    bot.onText(/\/help (.+)/, (msg, match) => {
+        const chatId = msg.chat.id;
+        bot.sendMessage(chatId, GREETING);
+    });
+}
+
 app.listen(PORT, function () {
     dotenv.config();
+    if (!init) {
+        startBot();
+        init = true;
+    }
     console.log('Example app listening on port ' + PORT + '!');
 });
