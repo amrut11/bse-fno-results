@@ -92,7 +92,7 @@ async function sendResultsMessage(bot, chatId, dateToCheck) {
         var resultsDate = new Date(result.date);
         if (resultsDate.getDate() == dateToCheck.getDate() && resultsDate.getMonth() == dateToCheck.getMonth() && resultsDate.getFullYear() == dateToCheck.getFullYear()) {
             var message = createMessage(result);
-            bot.sendMessage(chatId, message);
+            bot.sendMessage(chatId, message, { parse_mode: 'markdown' });
             return;
         }
     }
@@ -100,7 +100,7 @@ async function sendResultsMessage(bot, chatId, dateToCheck) {
 }
 
 function createMessage(result) {
-    var message = result.title + '\n';
+    var message = '*' + result.title + '*\n-----------------------------------\n';
     var symbols = result.Symbol;
     for (var i = 0; i < symbols.length; i++) {
         message += symbols[i] + '\n';
