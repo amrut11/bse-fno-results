@@ -117,6 +117,23 @@ function startBot() {
         const chatId = msg.chat.id;
         bot.sendMessage(chatId, GREETING);
     });
+
+    bot.onText(/\/atr (.+)/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const stockSymbol = match[1];
+        var atrUrl = process.env.atrApi.replace('{symbol}', stockSymbol).replace('{alphaVantageKey}', process.env.alphaVantageKey);
+        console.dir(atrUrl);
+        var response = await reqHelper.downloadPage(atrUrl);
+        var atrJson = response['Technical Analysis: ATR'];
+        if (atrJson) {
+            for (var k in atrJson) {
+                var message = 'ATR for ' + stockSymbol + ' as of ' + k + ' is ' + atrJson[k].ATR;
+                bot.sendMessage(chatId, message);
+                break;
+            }
+        }
+        bot.sendMessage('No data found');
+    });
 }
 
 app.listen(PORT, function () {
