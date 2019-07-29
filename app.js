@@ -122,7 +122,7 @@ function startBot() {
         const chatId = msg.chat.id;
         const stockSymbol = match[1];
         var atrUrl = process.env.atrApi.replace('{symbol}', stockSymbol).replace('{alphavantageKey}', process.env.alphavantageKey);
-        var response = await reqHelper.downloadPage(atrUrl);
+        var response = await reqHelper.downloadPage(atrUrl, true);
         var atrJson = response['Technical Analysis: ATR'];
         console.dir(atrUrl);
         if (atrJson) {
