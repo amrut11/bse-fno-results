@@ -121,8 +121,7 @@ function startBot() {
     bot.onText(/\/atr (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         const stockSymbol = match[1];
-        var atrUrl = process.env.atrApi.replace('{symbol}', stockSymbol).replace('{alphaVantageKey}', process.env.alphaVantageKey);
-        console.dir(atrUrl);
+        var atrUrl = process.env.atrApi.replace('{symbol}', stockSymbol).replace('{alphavantageKey}', process.env.alphaVantageKey);
         var response = await reqHelper.downloadPage(atrUrl);
         var atrJson = response['Technical Analysis: ATR'];
         if (atrJson) {
