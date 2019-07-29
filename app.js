@@ -72,7 +72,7 @@ async function sendResultsMessage(bot, chatId, dateToCheck) {
     for (var i = 0; i < results.length; i++) {
         var result = results[i];
         var resultsDate = new Date(result.date);
-        if (resultsDate.getDate() == dateToCheck.getDate() && resultsDate.getMonth() == dateToCheck.getMonth() && resultsDate.getFullYear() == dateToCheck.getFullYear()) {
+        if (dateutil.isSameDate(resultsDate, dateToCheck)) {
             var message = createMessage(result);
             bot.sendMessage(chatId, message, { parse_mode: 'markdown' });
             return;
@@ -121,19 +121,26 @@ function startBot() {
     bot.onText(/\/atr (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         const stockSymbol = match[1];
+        var dateToCheck;
+        if (match[2]) {
+            dateToCheck = new Date(match[2]);
+        } else {
+            dateToCheck = new Date();
+        }
         var atrUrl = process.env.atrApi.replace('{symbol}', stockSymbol).replace('{alphavantageKey}', process.env.alphavantageKey);
         var response = await reqHelper.downloadPage(atrUrl, true);
         var atrJson = response['Technical Analysis: ATR'];
-        console.dir(atrUrl);
         if (atrJson) {
             for (var k in atrJson) {
-                console.dir(k);
-                var message = 'ATR for ' + stockSymbol + ' as of ' + k + ' is ' + atrJson[k].ATR;
-                bot.sendMessage(chatId, message);
-                break;
+                var atrDate = new Date(k);
+                if (dateutil.isSameDate(atrDate, dateToCheck)) {
+                    var message = 'ATR for ' + stockSymbol + ' as of ' + k + ' is ' + atrJson[k].ATR;
+                    bot.sendMessage(chatId, message);
+                    break;
+                }
             }
         }
-        bot.sendMessage('No data found');
+        bot.sendMessage(chatId, 'No data found');
     });
 }
 

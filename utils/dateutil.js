@@ -23,6 +23,10 @@ function formatTimeDate(date) {
     return dateFormat(date, 'dd mmmm yyyy HH:MM:ss:l');
 }
 
+function isSameDate(date1, date2) {
+    return date1.getDate() == date2.getDate() && date1.getMonth() == date2.getMonth() && date1.getFullYear() == date2.getFullYear();
+}
+
 module.exports = {
-    getDate, formatDate, formatTodayDate, formatTimeDate
+    getDate, formatDate, formatTodayDate, formatTimeDate, isSameDate
 }
