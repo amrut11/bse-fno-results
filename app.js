@@ -90,10 +90,27 @@ function createMessage(result) {
     return message;
 }
 
+async function sendAtr(bot, chatId, stockSymbol, dateToCheck) {
+    var atrUrl = process.env.atrApi.replace('{symbol}', stockSymbol).replace('{alphavantageKey}', process.env.alphavantageKey);
+    var response = await reqHelper.downloadPage(atrUrl, true);
+    var atrJson = response['Technical Analysis: ATR'];
+    if (atrJson) {
+        for (var k in atrJson) {
+            var atrDate = new Date(k);
+            if (dateutil.isSameDate(atrDate, dateToCheck)) {
+                var message = 'ATR for ' + stockSymbol + ' as of ' + k + ' is ' + atrJson[k].ATR;
+                bot.sendMessage(chatId, message);
+                return;
+            }
+        }
+    }
+    bot.sendMessage(chatId, 'No data found');
+}
+
 function startBot() {
     const bot = new TelegramBot(process.env.token, { polling: true });
 
-    bot.onText(/\/results (.+)/, async (msg, match) => {
+    bot.onText(/results (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         const dateToCheck = match[1];
         var resultsDate;
@@ -107,41 +124,23 @@ function startBot() {
         await sendResultsMessage(bot, chatId, resultsDate);
     });
 
-    bot.onText(/\/check (.+)/, async (msg, match) => {
+    bot.onText(/check (.+)/, async (msg, match) => {
         var chatId = msg.chat.id;
         const interval = match[1];
         await checkResults(bot, chatId, interval, true);
     });
 
-    bot.onText(/\/help (.+)/, (msg, match) => {
+    bot.onText(/help (.+)/, (msg, match) => {
         const chatId = msg.chat.id;
         bot.sendMessage(chatId, GREETING);
     });
 
-    bot.onText(/\/atr (.+)/, async (msg, match) => {
+    bot.onText(/atr (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         const input = match[1].split(' ');
         const stockSymbol = input[0];
-        var dateToCheck;
-        if (input[1]) {
-            dateToCheck = new Date(input[1]);
-        } else {
-            dateToCheck = new Date();
-        }
-        var atrUrl = process.env.atrApi.replace('{symbol}', stockSymbol).replace('{alphavantageKey}', process.env.alphavantageKey);
-        var response = await reqHelper.downloadPage(atrUrl, true);
-        var atrJson = response['Technical Analysis: ATR'];
-        if (atrJson) {
-            for (var k in atrJson) {
-                var atrDate = new Date(k);
-                if (dateutil.isSameDate(atrDate, dateToCheck)) {
-                    var message = 'ATR for ' + stockSymbol + ' as of ' + k + ' is ' + atrJson[k].ATR;
-                    bot.sendMessage(chatId, message);
-                    return;
-                }
-            }
-        }
-        bot.sendMessage(chatId, 'No data found');
+        var dateToCheck = input[1] ? new Date(input[1]) : new Date();
+        await sendAtr(bot, chatId, stockSymbol, dateToCheck);
     });
 }
 
