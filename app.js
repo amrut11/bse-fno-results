@@ -120,10 +120,11 @@ function startBot() {
 
     bot.onText(/\/atr (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
-        const stockSymbol = match[1];
+        const input = match[1].split(' ');
+        const stockSymbol = input[0];
         var dateToCheck;
-        if (match[2]) {
-            dateToCheck = new Date(match[2]);
+        if (input[1]) {
+            dateToCheck = new Date(input[1]);
         } else {
             dateToCheck = new Date();
         }
@@ -136,7 +137,7 @@ function startBot() {
                 if (dateutil.isSameDate(atrDate, dateToCheck)) {
                     var message = 'ATR for ' + stockSymbol + ' as of ' + k + ' is ' + atrJson[k].ATR;
                     bot.sendMessage(chatId, message);
-                    break;
+                    return;
                 }
             }
         }
