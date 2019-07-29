@@ -124,8 +124,10 @@ function startBot() {
         var atrUrl = process.env.atrApi.replace('{symbol}', stockSymbol).replace('{alphavantageKey}', process.env.alphaVantageKey);
         var response = await reqHelper.downloadPage(atrUrl);
         var atrJson = response['Technical Analysis: ATR'];
+        console.dir(atrUrl);
         if (atrJson) {
             for (var k in atrJson) {
+                console.dir(k);
                 var message = 'ATR for ' + stockSymbol + ' as of ' + k + ' is ' + atrJson[k].ATR;
                 bot.sendMessage(chatId, message);
                 break;
