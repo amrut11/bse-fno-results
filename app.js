@@ -9,6 +9,9 @@ const ejs = require('ejs');
 
 const GREETING = 'Join https://t.me/joinchat/AAAAAFacF3TKxasORZyjpQ';
 
+const HTTP = 'HTTP';
+const BOT = 'BOT';
+
 const PORT = process.env.PORT || 3000;
 
 const app = express();
@@ -30,12 +33,14 @@ app.get('/startBot', function (req, res) {
 });
 
 app.get('/checkResult', async function (req, res) {
+    audit(HTTP, 'checkResult', null);
     const bot = new TelegramBot(process.env.token);
     await checkResults(bot, process.env.channelChatId, process.env.INTERVAL, false);
     res.render('index');
 });
 
 app.get('/todayResults', async function (req, res) {
+    audit(HTTP, 'todayResults', null);
     const bot = new TelegramBot(process.env.token);
     await sendResultsMessage(bot, process.env.channelChatId, dateutil.getDate());
     res.render('index');
@@ -61,8 +66,7 @@ async function checkResults(bot, chatId, interval, emptyMessage) {
         var diff = (date.getTime() - resultDate.getTime()) / 1000 / 60;
         if (diff > 0 && diff < interval) {
             resultsFound = true;
-            var message = '*Results out!*\n----------------------\nScrip: *' + scripName +
-                '*\nTime: ' + dateutil.formatTimeDate(resultDate) + '\nNews: ' + resultNews;
+            var message = createAnnouncedMessage(scripName, resultDate, resultNews);
             bot.sendMessage(chatId, message, { parse_mode: "markdown" });
         }
     }
@@ -80,6 +84,11 @@ async function updateDatabase(scripId, scripName, resultTime, resultNews) {
     }
 }
 
+function audit(source, endpoint, chatId) {
+    var sql = `insert into fno_audit values (to_timestamp(${Date.now() / 1000}), '${source}', '${endpoint}', '${chatId}')`;
+    dbService.runSql(sql);
+}
+
 async function checkResultExists(scripId, resultTime) {
     var sql = `select scrip_id from fno_results where scrip_id = '${scripId}' and result_time = to_timestamp(${resultTime / 1000})`;
     var result = await dbService.runSql(sql);
@@ -92,7 +101,7 @@ async function sendResultsMessage(bot, chatId, dateToCheck) {
         var result = results[i];
         var resultsDate = new Date(result.date);
         if (dateutil.isSameDate(resultsDate, dateToCheck)) {
-            var message = createMessage(result);
+            var message = createDailyResultMessage(result);
             bot.sendMessage(chatId, message, { parse_mode: 'markdown' });
             return;
         }
@@ -100,13 +109,32 @@ async function sendResultsMessage(bot, chatId, dateToCheck) {
     bot.sendMessage(chatId, 'No results on ' + dateutil.formatDate(dateToCheck));
 }
 
-function createMessage(result) {
+function createDailyResultMessage(result) {
     var message = '*' + result.title + '*\n-----------------------------------\n';
     var symbols = result.Symbol;
     for (var i = 0; i < symbols.length; i++) {
         message += symbols[i] + '\n';
     }
     return message;
+}
+
+async function sendAnnouncedMessage(bot, chatId, dateToCheck) {
+    var sql = `select * from fno_results where DATE(result_time) = CURRENT_DATE`;
+    var results = await dbService.runSql(sql);
+    if (results && results.length > 0) {
+        results.forEach(result => {
+            var resultDate = dateutil.convertToIST(result.result_time);
+            var message = createAnnouncedMessage(result.scrip_name, resultDate, result.result_news);
+            bot.sendMessage(chatId, message, { parse_mode: 'markdown' });
+        });
+    } else {
+        bot.sendMessage(chatId, 'No results on ' + dateutil.formatDate(dateToCheck));
+    }
+}
+
+function createAnnouncedMessage(scripName, resultDate, resultNews) {
+    return '*Results out!*\n----------------------\nScrip: *' + scripName +
+        '*\nTime: ' + dateutil.formatTimeDate(resultDate) + '\nNews: ' + resultNews;
 }
 
 async function sendAtr(bot, chatId, stockSymbol, dateToCheck) {
@@ -131,36 +159,49 @@ function startBot() {
 
     bot.onText(/results (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
-        const dateToCheck = match[1];
-        var resultsDate;
-
-        if (!dateToCheck || dateToCheck === 'today') {
-            resultsDate = dateutil.getDate();
-        } else {
-            resultsDate = new Date(dateToCheck);
-        }
-
+        audit(BOT, 'results ' + match[1], chatId);
+        var resultsDate = getDateFromMessage(match[1]);
         await sendResultsMessage(bot, chatId, resultsDate);
+    });
+
+    bot.onText(/announced (.+)/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        audit(BOT, 'announced ' + match[1], chatId);
+        var resultsDate = getDateFromMessage(match[1]);
+        await sendAnnouncedMessage(bot, chatId, resultsDate);
     });
 
     bot.onText(/check (.+)/, async (msg, match) => {
         var chatId = msg.chat.id;
+        audit(BOT, 'check ' + match[1], chatId);
         const interval = match[1];
         await checkResults(bot, chatId, interval, true);
     });
 
     bot.onText(/help (.+)/, (msg, match) => {
         const chatId = msg.chat.id;
+        audit(BOT, 'help ' + match[1], chatId);
         bot.sendMessage(chatId, GREETING);
     });
 
     bot.onText(/atr (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
+        audit(BOT, 'atr ' + match[1], chatId);
         const input = match[1].split(' ');
         const stockSymbol = input[0];
         var dateToCheck = input[1] ? new Date(input[1]) : new Date();
         await sendAtr(bot, chatId, stockSymbol, dateToCheck);
     });
+}
+
+function getDateFromMessage(dateToCheck) {
+    var resultsDate;
+    if (!dateToCheck || dateToCheck === 'today') {
+        resultsDate = dateutil.getDate();
+    } else {
+        resultsDate = new Date(dateToCheck);
+    }
+    return resultsDate;
 }
 
 app.listen(PORT, function () {

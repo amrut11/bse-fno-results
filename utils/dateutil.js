@@ -29,5 +29,5 @@ function isSameDate(date1, date2) {
 }
 
 module.exports = {
-    getDate, formatDate, formatTodayDate, formatTimeDate, isSameDate
+    getDate, convertToIST, formatDate, formatTodayDate, formatTimeDate, isSameDate
 }
