@@ -1,14 +1,15 @@
 var dateFormat = require('dateformat');
 
-const FIVE_AND_HALF_HOURS = 5.5 * 60 * 60 * 1000;
+const IST_OFFSET = -5.5 * 60;
+const SECONDS = 60 * 1000;
 
 function getDate() {
-    var date = new Date();
-    var offset = date.getTimezoneOffset();
-    if (offset == 0) {
-        date.setTime(date.getTime() + FIVE_AND_HALF_HOURS);
-    }
-    return date;
+    return convertToIST(new Date());
+}
+
+function convertToIST(date) {
+    var convertOffset = IST_OFFSET - date.getTimezoneOffset();
+    return new Date(date.getTime() + convertOffset * SECONDS);
 }
 
 function formatDate(date) {

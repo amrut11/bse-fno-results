@@ -1,5 +1,6 @@
 const dateutil = require('./utils/dateutil');
 const reqHelper = require('./utils/request-helper');
+const dbService = require('./utils/db-service');
 
 const TelegramBot = require('node-telegram-bot-api');
 const dotenv = require('dotenv');
@@ -50,21 +51,39 @@ async function checkResults(bot, chatId, interval, emptyMessage) {
     for (var i = 0; i < resultsTable.length; i++) {
         var result = resultsTable[i];
         var scripId = result.SCRIP_CD;
+        var scripName = result.SLONGNAME;
+        var resultDate = new Date(result.NEWS_DT);
+        var resultNews = result.NEWSSUB;
         if (!process.env.fnoScriptIDs.includes(scripId)) {
             continue;
         }
-        var resultDate = new Date(result.NEWS_DT);
+        await updateDatabase(scripId, scripName, resultDate.getTime(), resultNews);
         var diff = (date.getTime() - resultDate.getTime()) / 1000 / 60;
         if (diff > 0 && diff < interval) {
             resultsFound = true;
-            var message = '*Results out!*\n----------------------\nScrip: *' + result.SLONGNAME +
-                '*\nTime: ' + dateutil.formatTimeDate(resultDate) + '\nNews: ' + result.NEWSSUB;
+            var message = '*Results out!*\n----------------------\nScrip: *' + scripName +
+                '*\nTime: ' + dateutil.formatTimeDate(resultDate) + '\nNews: ' + resultNews;
             bot.sendMessage(chatId, message, { parse_mode: "markdown" });
         }
     }
     if (!resultsFound && emptyMessage) {
         bot.sendMessage(chatId, 'No results today in last ' + interval + ' minutes.');
     }
+}
+
+async function updateDatabase(scripId, scripName, resultTime, resultNews) {
+    var resultExists = await checkResultExists(scripId, resultTime);
+    if (!resultExists) {
+        var now = Date.now() / 1000;
+        var sql = `insert into fno_results values ('${scripId}', '${scripName}', to_timestamp(${resultTime / 1000}), '${resultNews}', to_timestamp(${now}))`;
+        await dbService.runSql(sql);
+    }
+}
+
+async function checkResultExists(scripId, resultTime) {
+    var sql = `select scrip_id from fno_results where scrip_id = '${scripId}' and result_time = to_timestamp(${resultTime / 1000})`;
+    var result = await dbService.runSql(sql);
+    return result && result.length > 0;
 }
 
 async function sendResultsMessage(bot, chatId, dateToCheck) {
