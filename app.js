@@ -63,8 +63,9 @@ async function checkResults(bot, chatId, interval, emptyMessage) {
             continue;
         }
         await updateDatabase(scripId, scripName, resultDate.getTime(), resultNews);
-        console.dir(scripName + ' ' + todayDate + ' ' + resultDate);
+        console.dir(scripName + ' ' + todayDate.getHours() + ' ' + resultDate.getHours());
         var diff = (todayDate.getTime() - resultDate.getTime()) / 1000 / 60;
+        console.dir(todayDate.getTime() + ' ' + resultDate.getTime() + ' ' + diff + ' ' + interval);
         if (diff > 0 && diff < interval) {
             resultsFound = true;
             var message = createAnnouncedMessage(scripName, resultDate, resultNews);
