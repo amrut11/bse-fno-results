@@ -8,8 +8,7 @@ function getDate() {
 }
 
 function convertToIST(date) {
-    var convertOffset = IST_OFFSET - date.getTimezoneOffset();
-    console.dir(date.getTimezoneOffset());
+    var convertOffset = date.getTimezoneOffset() - IST_OFFSET;
     return new Date(date.getTime() + convertOffset * SECONDS);
 }
 
