@@ -47,10 +47,9 @@ app.get('/todayResults', async function (req, res) {
 });
 
 async function checkResults(bot, chatId, interval, emptyMessage) {
-    var date = dateutil.getDate();
-    var todayDate = dateutil.formatTodayDate(date);
-    var resultsApi = process.env.bseResultsApi.replace('{startDate}', todayDate).replace('{endDate}', todayDate);
-    console.dir(resultsApi);
+    var todayDate = dateutil.getDate();
+    var todayDateFormatted = dateutil.formatTodayDate(todayDate);
+    var resultsApi = process.env.bseResultsApi.replace('{startDate}', todayDateFormatted).replace('{endDate}', todayDateFormatted);
     var currentResults = await reqHelper.downloadPage(resultsApi, true);
     var resultsTable = currentResults.Table;
     var resultsFound = false;
@@ -64,7 +63,8 @@ async function checkResults(bot, chatId, interval, emptyMessage) {
             continue;
         }
         await updateDatabase(scripId, scripName, resultDate.getTime(), resultNews);
-        var diff = (date.getTime() - resultDate.getTime()) / 1000 / 60;
+        console.dir(scripName + ' ' + todayDate + ' ' + resultDate);
+        var diff = (todayDate.getTime() - resultDate.getTime()) / 1000 / 60;
         if (diff > 0 && diff < interval) {
             resultsFound = true;
             var message = createAnnouncedMessage(scripName, resultDate, resultNews);
