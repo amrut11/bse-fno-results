@@ -63,9 +63,7 @@ async function checkResults(bot, chatId, interval, emptyMessage) {
             continue;
         }
         await updateDatabase(scripId, scripName, resultDate.getTime(), resultNews);
-        console.dir(scripName + ' ' + todayDate.getHours() + ' ' + resultDate.getHours());
         var diff = (todayDate.getTime() - resultDate.getTime()) / 1000 / 60;
-        console.dir(todayDate.getTime() + ' ' + resultDate.getTime() + ' ' + diff + ' ' + interval);
         if (diff > 0 && diff < interval) {
             resultsFound = true;
             var message = createAnnouncedMessage(scripName, resultDate, resultNews);
@@ -125,7 +123,7 @@ async function sendAnnouncedMessage(bot, chatId, dateToCheck) {
     var results = await dbService.runSql(sql);
     if (results && results.length > 0) {
         results.forEach(result => {
-            var resultDate = dateutil.convertToIST(result.result_time);
+            var resultDate = new Date(result.result_time);
             var message = createAnnouncedMessage(result.scrip_name, resultDate, result.result_news);
             bot.sendMessage(chatId, message, { parse_mode: 'markdown' });
         });
