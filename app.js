@@ -50,6 +50,7 @@ async function checkResults(bot, chatId, interval, emptyMessage) {
     var date = dateutil.getDate();
     var todayDate = dateutil.formatTodayDate(date);
     var resultsApi = process.env.bseResultsApi.replace('{startDate}', todayDate).replace('{endDate}', todayDate);
+    console.dir(resultsApi);
     var currentResults = await reqHelper.downloadPage(resultsApi, true);
     var resultsTable = currentResults.Table;
     var resultsFound = false;
