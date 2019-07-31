@@ -112,9 +112,11 @@ async function sendResultsMessage(bot, chatId, dateToCheck) {
 function createDailyResultMessage(result) {
     var message = '*' + result.title + '*\n-----------------------------------\n';
     var symbols = result.Symbol;
-    for (var i = 0; i < symbols.length; i++) {
-        message += symbols[i] + '\n';
-    }
+    symbols.forEach(symbol => {
+        if (process.env.fnoScripNames.includes(symbol)) {
+            message += symbol + '\n';
+        }
+    });
     return message;
 }
 
