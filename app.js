@@ -121,7 +121,7 @@ function createDailyResultMessage(result) {
 }
 
 async function sendAnnouncedMessage(bot, chatId, dateToCheck) {
-    var sql = `select * from fno_results where DATE(result_time) = CURRENT_DATE`;
+    var sql = `select * from fno_results where DATE(result_time) = DATE('${dateToCheck}')`;
     var results = await dbService.runSql(sql);
     if (results && results.length > 0) {
         results.forEach(result => {
@@ -170,6 +170,7 @@ function startBot() {
         const chatId = msg.chat.id;
         audit(BOT, 'announced ' + match[1], chatId);
         var resultsDate = getDateFromMessage(match[1]);
+        resultsDate = dateutil.formatTodayDate(resultsDate);
         await sendAnnouncedMessage(bot, chatId, resultsDate);
     });
 
