@@ -192,15 +192,19 @@ function startBot() {
         audit(BOT, 'atr ' + match[1], chatId);
         const input = match[1].split(' ');
         const stockSymbol = input[0];
-        var dateToCheck = input[1] ? new Date(input[1]) : new Date();
+        var dateToCheck = getDateFromMessage(input[1]);
         await sendAtr(bot, chatId, stockSymbol, dateToCheck);
     });
 }
 
 function getDateFromMessage(dateToCheck) {
     var resultsDate;
-    if (!dateToCheck || dateToCheck === 'today') {
+    if (dateToCheck === 'today') {
         resultsDate = dateutil.getDate();
+    } else if (dateToCheck === 'yesterday') {
+        resultsDate = dateutil.getYesterdayDate();
+    } else if (dateToCheck === 'tomorrow') {
+        resultsDate = dateutil.getTomorrowDate();
     } else {
         resultsDate = new Date(dateToCheck);
     }

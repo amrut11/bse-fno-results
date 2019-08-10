@@ -3,8 +3,22 @@ var dateFormat = require('dateformat');
 const IST_OFFSET = -5.5 * 60;
 const SECONDS = 60 * 1000;
 
+const TWENTY_FOUR_HOURS = 24 * 60 * SECONDS;
+
 function getDate() {
     return convertToIST(new Date());
+}
+
+function getYesterdayDate() {
+    var date = getDate();
+    date.setTime(date.getTime() - TWENTY_FOUR_HOURS);
+    return date;
+}
+
+function getTomorrowDate () {
+    var date = getDate();
+    date.setTime(date.getTime() + TWENTY_FOUR_HOURS);
+    return date;
 }
 
 function convertToIST(date) {
@@ -29,5 +43,5 @@ function isSameDate(date1, date2) {
 }
 
 module.exports = {
-    getDate, convertToIST, formatDate, formatTodayDate, formatTimeDate, isSameDate
+    getDate, getYesterdayDate, getTomorrowDate, convertToIST, formatDate, formatTodayDate, formatTimeDate, isSameDate
 }
