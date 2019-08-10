@@ -121,12 +121,12 @@ function createDailyResultMessage(result) {
 }
 
 async function sendAnnouncedMessage(bot, chatId, dateToCheck) {
-    var sql = `select * from fno_results where DATE(result_time) = DATE('${dateToCheck}')`;
+    var sql = `select * from fno_results where DATE(result_time) = DATE('${dateutil.formatTodayDate(dateToCheck)}')`;
     var results = await dbService.runSql(sql);
     if (results && results.length > 0) {
         results.forEach(result => {
             var resultDate = new Date(result.result_time);
-            var message = createAnnouncedMessage(result.scrip_name, resultDate, result.result_news);
+            var message = createAnnouncedMessage(result.scrip_name, resultDate, null);
             bot.sendMessage(chatId, message, { parse_mode: 'markdown' });
         });
     } else {
@@ -135,8 +135,15 @@ async function sendAnnouncedMessage(bot, chatId, dateToCheck) {
 }
 
 function createAnnouncedMessage(scripName, resultDate, resultNews) {
-    return '*Results out!*\n----------------------\nScrip: *' + scripName +
-        '*\nTime: ' + dateutil.formatTimeDate(resultDate) + '\nNews: ' + resultNews;
+    var message = '';
+    if (resultNews) {
+        message += '*Results out!*\n----------------------\n';
+    }
+    message += '*Stock*: *' + scripName + '*\n*Time*: ' + dateutil.formatTimeDate(resultDate);
+    if (resultNews) {
+        message += '\n*News*: ' + resultNews
+    }
+    return message;
 }
 
 async function sendAtr(bot, chatId, stockSymbol, dateToCheck) {
@@ -159,35 +166,34 @@ async function sendAtr(bot, chatId, stockSymbol, dateToCheck) {
 function startBot() {
     const bot = new TelegramBot(process.env.token, { polling: true });
 
-    bot.onText(/results (.+)/, async (msg, match) => {
+    bot.onText(/[Rr]esults (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         audit(BOT, 'results ' + match[1], chatId);
         var resultsDate = getDateFromMessage(match[1]);
         await sendResultsMessage(bot, chatId, resultsDate);
     });
 
-    bot.onText(/announced (.+)/, async (msg, match) => {
+    bot.onText(/[Aa]nnounced (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         audit(BOT, 'announced ' + match[1], chatId);
         var resultsDate = getDateFromMessage(match[1]);
-        resultsDate = dateutil.formatTodayDate(resultsDate);
         await sendAnnouncedMessage(bot, chatId, resultsDate);
     });
 
-    bot.onText(/check (.+)/, async (msg, match) => {
+    bot.onText(/[Cc]heck (.+)/, async (msg, match) => {
         var chatId = msg.chat.id;
         audit(BOT, 'check ' + match[1], chatId);
         const interval = match[1];
         await checkResults(bot, chatId, interval, true);
     });
 
-    bot.onText(/help (.+)/, (msg, match) => {
+    bot.onText(/[Hh]elp (.+)/, (msg, match) => {
         const chatId = msg.chat.id;
         audit(BOT, 'help ' + match[1], chatId);
         bot.sendMessage(chatId, GREETING);
     });
 
-    bot.onText(/atr (.+)/, async (msg, match) => {
+    bot.onText(/[Aa]tr (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         audit(BOT, 'atr ' + match[1], chatId);
         const input = match[1].split(' ');
