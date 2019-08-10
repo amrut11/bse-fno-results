@@ -121,14 +121,15 @@ function createDailyResultMessage(result) {
 }
 
 async function sendAnnouncedMessage(bot, chatId, dateToCheck) {
-    var sql = `select * from fno_results where DATE(result_time) = DATE('${dateutil.formatTodayDate(dateToCheck)}')`;
+    var sql = `select * from fno_results where DATE(result_time) = DATE('${dateutil.formatTodayDate(dateToCheck)}') order by result_time`;
     var results = await dbService.runSql(sql);
     if (results && results.length > 0) {
+        var message = '';
         results.forEach(result => {
             var resultDate = new Date(result.result_time);
-            var message = createAnnouncedMessage(result.scrip_name, resultDate, null);
-            bot.sendMessage(chatId, message, { parse_mode: 'markdown' });
+            message += createAnnouncedMessage(result.scrip_name, resultDate, null) + '\n';
         });
+        bot.sendMessage(chatId, message, { parse_mode: 'markdown' });
     } else {
         bot.sendMessage(chatId, 'No results on ' + dateutil.formatDate(dateToCheck));
     }
