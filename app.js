@@ -35,7 +35,7 @@ app.get('/startBot', function (req, res) {
 app.get('/checkResult', async function (req, res) {
     audit(HTTP, 'checkResult', null);
     const bot = new TelegramBot(process.env.token);
-    await checkResults(bot, process.env.channelChatId, process.env.INTERVAL, false);
+    await checkResults(bot, process.env.channelChatId, null);
     res.render('index');
 });
 
@@ -46,7 +46,7 @@ app.get('/todayResults', async function (req, res) {
     res.render('index');
 });
 
-async function checkResults(bot, chatId, interval, emptyMessage) {
+async function checkResults(bot, chatId, interval) {
     var todayDate = dateutil.getDate();
     var todayDateFormatted = dateutil.formatTodayDate(todayDate);
     var resultsApi = process.env.bseResultsApi.replace('{startDate}', todayDateFormatted).replace('{endDate}', todayDateFormatted);
@@ -62,15 +62,19 @@ async function checkResults(bot, chatId, interval, emptyMessage) {
         if (!process.env.fnoScriptIDs.includes(scripId)) {
             continue;
         }
-        await updateDatabase(scripId, scripName, resultDate.getTime(), resultNews);
-        var diff = (todayDate.getTime() - resultDate.getTime()) / 1000 / 60;
-        if (diff > 0 && diff < interval) {
+        var resultNotified = await updateDatabase(scripId, scripName, resultDate.getTime(), resultNews);
+        var notify = !resultNotified;
+        if (interval) {
+            var diff = (todayDate.getTime() - resultDate.getTime()) / 1000 / 60;
+            notify = diff > 0 && diff < interval;
+        }
+        if (notify) {
             resultsFound = true;
             var message = createAnnouncedMessage(scripName, resultDate, resultNews);
             bot.sendMessage(chatId, message, { parse_mode: "markdown" });
         }
     }
-    if (!resultsFound && emptyMessage) {
+    if (!resultsFound && interval) {
         bot.sendMessage(chatId, 'No results today in last ' + interval + ' minutes.');
     }
 }
@@ -82,6 +86,7 @@ async function updateDatabase(scripId, scripName, resultTime, resultNews) {
         var sql = `insert into fno_results values ('${scripId}', '${scripName}', to_timestamp(${resultTime / 1000}), '${resultNews}', to_timestamp(${now}))`;
         await dbService.runSql(sql);
     }
+    return resultExists;
 }
 
 function audit(source, endpoint, chatId) {
@@ -185,7 +190,7 @@ function startBot() {
         var chatId = msg.chat.id;
         audit(BOT, 'check ' + match[1], chatId);
         const interval = match[1];
-        await checkResults(bot, chatId, interval, true);
+        await checkResults(bot, chatId, interval);
     });
 
     bot.onText(/[Hh]elp (.+)/, (msg, match) => {
