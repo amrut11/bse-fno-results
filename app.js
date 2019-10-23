@@ -83,6 +83,7 @@ async function updateDatabase(scripId, scripName, resultTime, resultNews) {
     var resultExists = await checkResultExists(scripId, resultTime);
     if (!resultExists) {
         var now = Date.now() / 1000;
+        resultNews = resultNews.replace(/'/g, '"');
         var sql = `insert into fno_results values ('${scripId}', '${scripName}', to_timestamp(${resultTime / 1000}), '${resultNews}', to_timestamp(${now}))`;
         await dbService.runSql(sql);
     }
