@@ -175,6 +175,10 @@ function startBot() {
 
     bot.onText(/[Rr]esults (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
+        if (!process.env.authorisedUsers.includes(chatId)) {
+            bot.sendMessage(chatId, 'Sorry. You\'re not authorised to use this. Please contact @NFOResult if you require access.');
+            return;
+        }
         audit(BOT, 'results ' + match[1], chatId);
         var resultsDate = getDateFromMessage(match[1]);
         await sendResultsMessage(bot, chatId, resultsDate);
@@ -182,6 +186,10 @@ function startBot() {
 
     bot.onText(/[Aa]nnounced (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
+        if (!process.env.authorisedUsers.includes(chatId)) {
+            bot.sendMessage(chatId, 'Sorry. You\'re not authorised to use this. Please contact @NFOResult if you require access.');
+            return;
+        }
         audit(BOT, 'announced ' + match[1], chatId);
         var resultsDate = getDateFromMessage(match[1]);
         await sendAnnouncedMessage(bot, chatId, resultsDate);
@@ -189,6 +197,10 @@ function startBot() {
 
     bot.onText(/[Cc]heck (.+)/, async (msg, match) => {
         var chatId = msg.chat.id;
+        if (!process.env.authorisedUsers.includes(chatId)) {
+            bot.sendMessage(chatId, 'Sorry. You\'re not authorised to use this. Please contact @NFOResult if you require access.');
+            return;
+        }
         audit(BOT, 'check ' + match[1], chatId);
         const interval = match[1];
         await checkResults(bot, chatId, interval);
@@ -202,6 +214,10 @@ function startBot() {
 
     bot.onText(/[Aa]tr (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
+        if (!process.env.authorisedUsers.includes(chatId)) {
+            bot.sendMessage(chatId, 'Sorry. You\'re not authorised to use this. Please contact @NFOResult if you require access.');
+            return;
+        }
         audit(BOT, 'atr ' + match[1], chatId);
         const input = match[1].split(' ');
         const stockSymbol = input[0];
