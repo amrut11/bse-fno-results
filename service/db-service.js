@@ -22,6 +22,11 @@ async function runSql(sql) {
     });
 }
 
+function audit(source, endpoint, chatId) {
+    var sql = `insert into fno_audit values (to_timestamp(${Date.now() / 1000}), '${source}', '${endpoint}', '${chatId}')`;
+    runSql(sql);
+}
+
 module.exports = {
-    runSql
+    runSql, audit
 };
