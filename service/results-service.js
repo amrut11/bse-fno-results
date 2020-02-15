@@ -87,7 +87,7 @@ async function sendResultsMessage(bot, chatId, dateToCheck) {
             return;
         }
     }
-    bot.sendMessage(chatId, 'No results on ' + formatDate(dateToCheck));
+    bot.sendMessage(chatId, 'No results on ' + dateUtil.formatDate(dateToCheck));
 }
 
 function createDailyResultMessage(result) {
