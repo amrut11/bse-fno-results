@@ -57,5 +57,5 @@ function getDateFromMessage(dateToCheck) {
 }
 
 module.exports = {
-    getDate, getYesterdayDate, getTomorrowDate, convertToIST, formatDate, formatTodayDate, formatTimeDate, isSameDate, getDateFromMessage
+    getDate, formatDate, formatTodayDate, formatTimeDate, isSameDate, getDateFromMessage
 }
